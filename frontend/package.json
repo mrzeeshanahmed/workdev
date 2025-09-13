@@ -1,0 +1,36 @@
+{
+  "name": "workdev-frontend",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "test": "vitest --run --reporter verbose ../specs/**/tests/**/*.test.@(ts|tsx)",
+    "lint": "tsc --noEmit",
+  "eslint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --max-warnings 0",
+    "test:contracts": "vitest --run --reporter verbose E:/workdev/specs/**/tests/**/*.test.@(ts|tsx)"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "jsdom": "^21.1.2",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "eslint-plugin-react": "^7.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "@tanstack/react-query": "^5.0.0",
+    "clsx": "^2.0.0",
+    "react-router-dom": "^6.0.0",
+    "zustand": "^4.0.0"
+  }
+}

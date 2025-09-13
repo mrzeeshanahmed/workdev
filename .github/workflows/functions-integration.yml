@@ -1,0 +1,39 @@
+name: Functions Integration Tests
+
+on:
+  push:
+    branches: [ main, '001-title-core-platform' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      FUNCTIONS_PORT: 54322
+      RUN_FUNCTIONS_LOCAL: '1'
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install functions deps
+        run: npm --prefix functions ci
+
+      - name: Install frontend deps
+        run: npm --prefix frontend ci
+
+      - name: Start functions dev server
+        run: node functions/dev-server.js &
+
+      - name: Run frontend tests (integration)
+        run: |
+          export RUN_FUNCTIONS_LOCAL=1
+          export FUNCTIONS_PORT=54322
+          npm --prefix frontend test --silent

@@ -1,0 +1,16 @@
+{
+  "name": "workdev-functions",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "node dev-server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.28.0",
+    "express": "^4.18.2",
+    "speakeasy": "^2.0.0",
+  "qrcode": "^1.5.1",
+    "bcryptjs": "^2.4.3",
+    "workdev-frontend": "file:../frontend"
+  }
+}
