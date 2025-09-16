@@ -42,8 +42,9 @@ export function useMessages(conversationId: string, currentUserId: string) {
                 })
         }
         // subscribe to realtime changes
-        // @ts-expect-error - event typing from supabase client
-        sub = client.channel('public:messages').on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` }, (payload) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - event typing from supabase client
+  sub = client.channel('public:messages').on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` }, (payload) => {
           const newMsg = payload.new as Message
           setMessages((m) => [...m, newMsg])
         }).subscribe()

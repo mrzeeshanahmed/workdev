@@ -1,0 +1,30 @@
+/* Minimal marketplace styles used by new components */
+.project-card {
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.dev-card {
+  border: 1px solid #eee;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.projects-container {
+  margin-top: 20px;
+}
+
+.featured-section h2 {
+  margin-top: 8px;
+}
+
+.loading {
+  color: #666;
+}
+.project-card { border: 1px solid #ddd; padding: 12px; border-radius: 6px; margin-bottom: 8px; }
+.featured-list { margin-bottom: 16px; }
+.dev-card { border: 1px solid #eee; padding: 8px; border-radius: 4px; margin-bottom: 8px; }
+.marketpage-body { margin-top: 20px; }

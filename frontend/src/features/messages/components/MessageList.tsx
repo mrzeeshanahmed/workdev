@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useMessages } from '../useMessages'
+import styles from './MessageList.module.css'
 
 type Props = {
   conversationId: string
@@ -9,8 +10,17 @@ type Props = {
 export function MessageList({ conversationId, currentUserId }: Props) {
   const { messages, loading, sendMessage } = useMessages(conversationId, currentUserId)
   const [text, setText] = useState('')
-
-  // ...existing code...
+  // submit handler extracted for readability and easier testing
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!text) return
+    try {
+      await sendMessage(text)
+      setText('')
+    } catch (err) {
+      // swallow send errors for now; UI can show toast in future
+    }
+  }
 
   return (
     <div>
@@ -20,8 +30,11 @@ export function MessageList({ conversationId, currentUserId }: Props) {
           <li key={m.id} data-testid={`msg-${m.id}`}>{m.text}</li>
         ))}
       </ul>
-      <form onSubmit={async (e) => { e.preventDefault(); if (!text) return; try { await sendMessage(text); setText('') } catch (err) { /* noop */ } }}>
-        <input data-testid="message-input" value={text} onChange={(e) => setText(e.target.value)} />
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="message-input" className={styles.visuallyHidden}>
+          Message
+        </label>
+        <input id="message-input" data-testid="message-input" placeholder="Write a message" value={text} onChange={(e) => setText(e.target.value)} />
         <button data-testid="send-btn" type="submit">Send</button>
       </form>
     </div>
