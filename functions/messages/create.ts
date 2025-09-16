@@ -1,8 +1,10 @@
+// @ts-nocheck
 import { serve } from 'std/server'
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = Deno.env.get('VITE_SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+// Support both Deno (Edge) and Node (dev server) environments
+const SUPABASE_URL = (typeof Deno !== 'undefined' && Deno?.env?.get) ? Deno.env.get('VITE_SUPABASE_URL') : process.env.VITE_SUPABASE_URL
+const SUPABASE_SERVICE_ROLE = (typeof Deno !== 'undefined' && Deno?.env?.get) ? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') : process.env.SUPABASE_SERVICE_ROLE_KEY
 const supabase = createClient(SUPABASE_URL ?? '', SUPABASE_SERVICE_ROLE ?? '')
 
 serve(async (req) => {

@@ -26,7 +26,9 @@ vi.mock('@supabase/supabase-js', () => {
 
 describe('Messages optimistic UI (T008)', () => {
   it('shows optimistic message immediately and replaces it after server ack', async () => {
-    render(React.createElement(MessageList as any, { conversationId: 'conv-1', currentUserId: 'user-1' }))
+  // use createElement but provide a children prop (null) so React's types accept it in .ts files
+  const el = React.createElement(MessageList as any, { conversationId: 'conv-1', currentUserId: 'user-1', children: null })
+  render(el as any)
     const input = screen.getByTestId('message-input') as HTMLInputElement
     const btn = screen.getByTestId('send-btn') as HTMLButtonElement
 

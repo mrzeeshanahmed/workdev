@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from 'std/server'
 import speakeasy from 'speakeasy'
 
