@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 4173",
-    "test": "vitest --env jsdom --run --reporter verbose",
+  "test": "vitest --environment jsdom --run --reporter verbose",
     "test:contracts": "vitest --run --reporter verbose E:/workdev/specs/**/tests/**/*.test.@(ts|tsx)",
     "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --max-warnings 0",
     "typecheck": "tsc --noEmit"

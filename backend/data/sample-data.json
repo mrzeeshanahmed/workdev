@@ -1,0 +1,21 @@
+{
+  "projects": [
+    {
+      "id": "p-local-1",
+      "owner_id": "local-user",
+      "title": "Local sample project",
+      "description": "A local sample project for dev",
+      "type": "fixed",
+      "budget_min": 500,
+      "budget_max": 1500,
+      "skills": ["react","tailwind"],
+      "status": "open",
+      "created_at": "2025-01-01T00:00:00.000Z"
+    }
+  ],
+  "skills": [
+    { "id": 1, "name": "react" },
+    { "id": 2, "name": "tailwind" }
+  ],
+  "proposals": []
+}

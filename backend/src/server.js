@@ -2,6 +2,8 @@ const express = require('express')
 // using express.json() instead of body-parser
 const { listPublicProjects } = require('./controllers/publicProjectsController')
 const { getProjectDetail } = require('./controllers/publicProjectDetailController')
+const { listProjects, createProject, getProjectDetail: getProjectDetailInternal } = require('./controllers/projectsController')
+const { createProposal, acceptProposal } = require('./controllers/proposalsController')
 const { listPublicDevelopers } = require('./controllers/publicDevelopersController')
 const { getDeveloperDetail } = require('./controllers/publicDeveloperDetailController')
 const rateLimit = require('./middleware/rateLimit')
@@ -34,6 +36,38 @@ app.get('/api/public/developers/:id', async (req, res) => {
   const dev = await getDeveloperDetail(req.params.id, { authenticated })
   if (!dev) return res.status(404).json({ error: 'not found' })
   res.json(dev)
+})
+
+// Client dashboard API: projects (private/public per auth in later iterations)
+app.post('/api/projects', async (req, res) => {
+  // In production, owner_id should be pulled from auth token; for now use header or fallback
+  const owner_id = req.headers['x-user-id'] || req.body.owner_id || null
+  const payload = Object.assign({}, req.body, { owner_id })
+  const project = await createProject(payload)
+  res.status(201).json(project)
+})
+
+app.get('/api/projects', async (req, res) => {
+  const data = await listProjects(req.query)
+  res.json({ total: data.total_count, items: data.items })
+})
+
+app.get('/api/projects/:id', async (req, res) => {
+  const project = await getProjectDetailInternal(req.params.id)
+  if (!project) return res.status(404).json({ error: 'not found' })
+  res.json(project)
+})
+
+app.post('/api/projects/:id/proposals', async (req, res) => {
+  const proposal = await createProposal(req.params.id, req.body)
+  res.status(201).json(proposal)
+})
+
+app.patch('/api/projects/:projectId/proposals/:proposalId/accept', async (req, res) => {
+  const actor = req.headers['x-user-id'] || null
+  const result = await acceptProposal(req.params.projectId, req.params.proposalId, actor)
+  if (!result) return res.status(404).json({ error: 'not found' })
+  res.json(result)
 })
 
 // Simple health check for readiness probes and test harnesses
