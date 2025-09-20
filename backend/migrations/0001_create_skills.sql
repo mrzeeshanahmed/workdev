@@ -1,3 +1,27 @@
+-- 0001_create_skills.sql
+-- Create skills table and sample seed data
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS skills (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Sample data (idempotent)
+INSERT INTO skills (name)
+SELECT v.name FROM (VALUES
+  ('javascript'),
+  ('typescript'),
+  ('react'),
+  ('nodejs'),
+  ('postgres')
+) AS v(name)
+WHERE NOT EXISTS (
+  SELECT 1 FROM skills s WHERE s.name = v.name
+);
+
+COMMIT;
 -- Migration: create skills table
 -- File: backend/migrations/0001_create_skills.sql
 BEGIN;

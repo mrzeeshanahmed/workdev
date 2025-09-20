@@ -1,52 +1,117 @@
 const { spawn } = require('child_process')
+const fetch = require('node-fetch')
 const path = require('path')
+const fs = require('fs')
 
-let child = null
+const BACKEND_DIR = path.resolve(__dirname, '../../backend')
+const BASE_URL = 'http://localhost:4000'
+const START_TIMEOUT = 20000
+const STATE_FILE = path.resolve(__dirname, '.devserver.json')
 
-module.exports = undefined
+let serverProcess = null
 
-exports.default = async function globalSetup() {
-  // Start functions dev server
-  const cwd = path.resolve(__dirname, '..', '..', 'functions')
-  // If dev-server already running, don't spawn a second instance
-  let fetch
-  if (typeof global.fetch === 'function') {
-    fetch = global.fetch
-  } else {
-    fetch = require('node-fetch')
-  }
-  const base = `http://127.0.0.1:${process.env.FUNCTIONS_PORT || '54323'}`
-  try {
-    const ping = await fetch(`${base}/functions/v1/health`, { timeout: 500 })
-    if (ping.ok) {
-      // Already running — return a teardown that does nothing
-      return async function noopTeardown() {}
+function waitForServer(timeout = START_TIMEOUT) {
+  const start = Date.now()
+  return new Promise((resolve, reject) => {
+    let resolved = false
+
+    // if server writes a listening message, resolve immediately
+    const onStdout = (chunk) => {
+      const s = chunk.toString().toLowerCase()
+      if (s.includes('listening') || s.includes('api server listening') || s.includes('server listening')) {
+        resolved = true
+        cleanup()
+        return resolve()
+      }
     }
-  } catch (e) {
-    // not running — spawn a new one
-  }
 
-  child = spawn(process.execPath, ['dev-server.js'], { cwd, env: { ...process.env, FUNCTIONS_PORT: process.env.FUNCTIONS_PORT || '54323' }, stdio: ['ignore', 'pipe', 'pipe'] })
-  child.stdout.on('data', (d) => { process.stdout.write(`[functions] ${d}`) })
-  child.stderr.on('data', (d) => { process.stderr.write(`[functions-err] ${d}`) })
+    function cleanup() {
+      if (serverProcess && serverProcess.stdout && serverProcess.stdout.off) {
+        serverProcess.stdout.off('data', onStdout)
+      }
+    }
 
-  // wait for health endpoint
-  const deadline = Date.now() + 5000
-  while (Date.now() < deadline) {
+    if (serverProcess && serverProcess.stdout && serverProcess.stdout.on) {
+      serverProcess.stdout.on('data', onStdout)
+    }
+
+    const attempt = async () => {
+      try {
+        const res = await fetch(BASE_URL + '/api/health').catch(() => null)
+        if (res) {
+          resolved = true
+          cleanup()
+          return resolve()
+        }
+      } catch (e) {
+        // ignore
+      }
+      if (resolved) return
+      if (Date.now() - start > timeout) {
+        cleanup()
+        return reject(new Error('server did not start'))
+      }
+      setTimeout(attempt, 200)
+    }
+    attempt()
+  })
+}
+
+async function startIfNeeded() {
+  if (serverProcess) return { baseUrl: BASE_URL }
+
+  serverProcess = spawn(process.execPath, ['src/server.js'], {
+    cwd: BACKEND_DIR,
+    env: Object.assign({}, process.env, { NODE_ENV: 'test', DATABASE_URL: '' }),
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+
+  serverProcess.stdout.on('data', (d) => console.log(`[backend] ${d.toString()}`))
+  serverProcess.stderr.on('data', (d) => console.error(`[backend:err] ${d.toString()}`))
+
+  await waitForServer()
+
+  // write state file for teardown
+  fs.writeFileSync(STATE_FILE, JSON.stringify({ pid: serverProcess.pid, baseUrl: BASE_URL }))
+
+  // expose CONTRACT_BASE_URL for tests that read env
+  process.env.CONTRACT_BASE_URL = BASE_URL
+
+  return { baseUrl: BASE_URL, urlBase: BASE_URL }
+}
+
+async function stop() {
+  if (serverProcess && serverProcess.pid) {
     try {
-      const r = await fetch(`${base}/functions/v1/health`)
-      if (r.ok) break
+      serverProcess.kill()
     } catch (e) {
       // ignore
     }
-    await new Promise((r) => setTimeout(r, 200))
-  }
-
-  // return a teardown function for Vitest to call after tests
-  return async function teardown() {
-    if (child && !child.killed) {
-      child.kill()
-      child = null
+  } else if (fs.existsSync(STATE_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
+      if (data && data.pid) process.kill(data.pid)
+    } catch (e) {
+      // ignore
     }
   }
+  if (fs.existsSync(STATE_FILE)) fs.unlinkSync(STATE_FILE)
+  serverProcess = null
 }
+
+// Vitest expects default export to be a function for globalSetup/globalTeardown
+module.exports = async function globalSetup() {
+  // start server
+  const info = await startIfNeeded()
+  // Vitest expects globalSetup to optionally return a teardown function.
+  // Return a function that will be called to stop the server.
+  return async function globalTeardown() {
+    await stop()
+  }
+}
+
+// Also expose named functions for direct imports
+module.exports.startIfNeeded = startIfNeeded
+module.exports.stop = stop
+module.exports.STATE_FILE = STATE_FILE
+// end of file

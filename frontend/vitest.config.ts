@@ -10,9 +10,9 @@ const cfg: any = {
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    // keep devServerSetup as global setup/teardown for integration tests
+    // keep devServerSetup as global setup and devServerTeardown as teardown for integration tests
     globalSetup: path.resolve(__dirname, '..', 'specs', 'test-helpers', 'devServerSetup.js'),
-    globalTeardown: path.resolve(__dirname, '..', 'specs', 'test-helpers', 'devServerSetup.js')
+    globalTeardown: path.resolve(__dirname, '..', 'specs', 'test-helpers', 'devServerTeardown.js')
   }
 }
 
