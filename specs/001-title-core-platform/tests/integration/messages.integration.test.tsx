@@ -1,7 +1,8 @@
+// @vitest-environment jsdom
 import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MessageList } from '/frontend/src/features/messages/components/MessageList'
+import { MessageList } from '../../../../frontend/src/features/messages/components/MessageList'
 
 // Mock the supabase client used in the hook to simulate delayed server ack
 vi.mock('@supabase/supabase-js', () => {

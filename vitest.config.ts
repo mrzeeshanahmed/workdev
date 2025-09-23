@@ -11,3 +11,19 @@ module.exports = {
     reporters: 'verbose'
   }
 }
+
+// Add resolver aliases so tests import React from the frontend package's
+// node_modules (single copy), preventing the "Invalid hook call" issue when
+// vitest (installed at repo root) resolves a different React instance.
+try {
+  const path = require('path')
+  const frontendNodeModules = path.resolve(__dirname, 'frontend', 'node_modules')
+  module.exports.resolve = {
+    alias: {
+      react: path.join(frontendNodeModules, 'react'),
+      'react-dom': path.join(frontendNodeModules, 'react-dom')
+    }
+  }
+} catch (e) {
+  // best-effort; ignore when running in environments without frontend deps
+}

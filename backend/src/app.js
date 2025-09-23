@@ -24,6 +24,31 @@ function ensureDeveloper(id) {
 import developersRouter from './api/developers.js'
 app.use('/developers', developersRouter)
 
+import milestonesRouter from './api/milestones.js'
+app.use('/api/workspaces/:workspaceId/milestones', (req, res, next) => {
+  // forward to milestones router while keeping param workspaceId
+  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
+  next()
+}, milestonesRouter)
+
+import filesRouter from './api/files.js'
+app.use('/api/workspaces/:workspaceId/files', (req, res, next) => {
+  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
+  next()
+}, filesRouter)
+
+import notificationsRouter from './api/notifications.js'
+app.use('/api/workspaces/:workspaceId/notifications', (req, res, next) => {
+  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
+  next()
+}, notificationsRouter)
+
+import messagesRouter from './api/messages.js'
+app.use('/api/workspaces/:workspaceId/messages', (req, res, next) => {
+  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
+  next()
+}, messagesRouter)
+
 app.post('/developers/:developerId/saved-searches', (req, res) => {
   const developerId = req.params.developerId
   const dev = ensureDeveloper(developerId)
@@ -87,8 +112,10 @@ app.get('/developers/:developerId/proposals', async (req, res) => {
 
 export default app
 
-// If run directly, start server
-if (require.main === module) {
+// If run directly, start server (ESM-safe)
+import { fileURLToPath } from 'url'
+const __filename = fileURLToPath(import.meta.url)
+if (process.argv[1] === __filename) {
   const port = process.env.PORT || 3000
   app.listen(port, () => console.log(`Server listening on ${port}`))
 }

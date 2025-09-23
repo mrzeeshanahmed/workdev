@@ -8,6 +8,10 @@
     "@types/react": "^19.1.13",
     "jsdom": "^27.0.0",
     "supabase": "^2.40.7",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "supertest": "^6.3.3"
+  },
+  "dependencies": {
+    "uuid": "^13.0.0"
   }
 }
