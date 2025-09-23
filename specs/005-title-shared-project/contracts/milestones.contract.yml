@@ -1,0 +1,39 @@
+````yaml
+# Contract: Milestones API
+/
+paths:
+  /api/workspaces/{workspaceId}/milestones:
+    post:
+      summary: Create a milestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                dueDate:
+                  type: string
+                  format: date
+                amount:
+                  type: number
+      responses:
+        '201':
+          description: Milestone created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [milestoneId, state]
+                properties:
+                  milestoneId:
+                    type: string
+                  state:
+                    type: string
+
+````
