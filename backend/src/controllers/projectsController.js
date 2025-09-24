@@ -17,44 +17,53 @@ const SAMPLE_PROJECTS = [
 
 async function listProjects(query = {}) {
   if (db.isDbEnabled) {
-    const page_size = parseInt(query.page_size, 10) || 20
-    const page = parseInt(query.page, 10) || 0
+    const page_size = Math.max(1, parseInt(query.page_size, 10) || 20)
+    const page = Math.max(0, parseInt(query.page, 10) || 0)
     const offset = page * page_size
+
     const where = []
     const params = []
     let idx = 1
+
+    // Full-text or simple ILIKE search on title/description
     if (query.q) {
-      where.push("(title ILIKE $" + idx + " OR description ILIKE $" + idx + ")")
+      where.push(`(p.title ILIKE $${idx} OR p.short_description ILIKE $${idx} OR p.description ILIKE $${idx})`)
       params.push('%' + query.q + '%')
       idx++
     }
-    if (query.status) {
-      where.push('status = $' + idx)
-      params.push(query.status)
-      idx++
-    }
+
+    // canonical schema does not include a 'status' column; ignore query.status unless schema changes
+
     const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : ''
-    // Select minimal project columns and aggregate skills as a text[] via a correlated subquery.
-    // Keep ordering and pagination stable.
+
+    // Aggregate skills via joins and group by project columns
     const sql = `SELECT
-      p.id, p.owner_id, p.title, p.description, p.project_type, p.budget_min, p.budget_max, p.status, p.created_at,
-      COALESCE((SELECT array_agg(s.name) FROM project_skills pk JOIN skills s ON s.id = pk.skill_id WHERE pk.project_id = p.id), ARRAY[]::text[]) AS skills
-      FROM projects p
-      ${whereSql}
-      ORDER BY created_at DESC
-      LIMIT $${idx} OFFSET $${idx+1}`
+      p.id, p.owner_id, p.title, p.short_description, p.description, p.project_type, p.budget_min, p.budget_max, p.budget_currency, p.is_public, p.featured, p.featured_at, p.created_at,
+      COALESCE(array_agg(DISTINCT s.name) FILTER (WHERE s.name IS NOT NULL) ORDER BY s.name, ARRAY[]::text[]) AS skills
+    FROM projects p
+    LEFT JOIN project_skills pk ON pk.project_id = p.id
+    LEFT JOIN skills s ON s.id = pk.skill_id
+    ${whereSql}
+    GROUP BY p.id
+    ORDER BY p.created_at DESC
+    LIMIT $${idx} OFFSET $${idx+1}`
     params.push(page_size, offset)
+
     const { rows } = await db.query(sql, params)
-    // ensure skills is always an array (Postgres text[] should map to JS array; fallback to empty array)
     const items = rows.map(r => {
+      // ensure skills is always an array
       r.skills = Array.isArray(r.skills) ? r.skills : []
       return r
     })
-    // get total count (use same where params)
-    const countParams = params.slice(0, Math.max(0, idx-1))
-    const countRes = await db.query(`SELECT COUNT(*)::int AS cnt FROM projects ${whereSql}`, countParams)
+
+    // total count
+    const countParams = params.slice(0, idx - 1)
+    const countSql = `SELECT COUNT(*)::int AS cnt FROM projects p ${whereSql}`
+    const countRes = await db.query(countSql, countParams)
     const total = countRes.rows[0] ? countRes.rows[0].cnt : items.length
-    return { items, total_count: total, next_cursor: (items.length === page_size ? String(page + 1) : null) }
+
+    const next_cursor = (items.length === page_size) ? String(page + 1) : null
+    return { items, total_count: total, next_cursor }
   }
 
   // fallback
@@ -73,10 +82,22 @@ async function listProjects(query = {}) {
 
 async function createProject(payload) {
   if (db.isDbEnabled) {
+    // Expect caller (route) to set payload.owner_id from authenticated user (req.user.id)
     const { rows } = await db.query(
-      `INSERT INTO projects (owner_id, title, description, project_type, budget_min, budget_max)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [payload.owner_id || null, payload.title, payload.description, payload.project_type || payload.type || 'fixed', payload.budget_min || null, payload.budget_max || null]
+      `INSERT INTO projects (owner_id, title, short_description, description, project_type, budget_min, budget_max, budget_currency, is_public, featured)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [
+        payload.owner_id || null,
+        payload.title,
+        payload.short_description || null,
+        payload.description || null,
+        payload.project_type || payload.type || 'fixed',
+        payload.budget_min || null,
+        payload.budget_max || null,
+        payload.budget_currency || 'USD',
+        typeof payload.is_public === 'boolean' ? payload.is_public : true,
+        !!payload.featured
+      ]
     )
     const project = rows[0]
     // If skills were provided, insert into project_skills if table exists
@@ -92,8 +113,8 @@ async function createProject(payload) {
         }
       }
     }
-    // attach skills array
-    project.skills = payload.skills || []
+    // If skills were provided, insert into project_skills as before and attach array
+    project.skills = []
     return project
   }
   // fallback sample project
