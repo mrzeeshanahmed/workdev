@@ -4,3 +4,4 @@ node_modules
 .vscode
 specs
 frontend/eslint-report.json
+functions/handlers/

@@ -7,9 +7,10 @@ app.use(bodyParser.json())
 
 function loadHandler(path) {
   try {
-    // convert /auth/signup -> handlers/auth/signup.js (absolute)
+    // convert /auth/signup -> auth/signup/index.ts (absolute)
     const pathLib = require('path')
-    const handlerPath = pathLib.resolve(__dirname, `handlers${path}.js`)
+    const sourcePath = path.slice(1) + '/index.ts'  // remove leading /, add /index.ts
+    const handlerPath = pathLib.resolve(__dirname, sourcePath)
     // eslint-disable-next-line import/no-dynamic-require
     const handler = require(handlerPath)
     if (typeof handler !== 'function') return null
@@ -28,7 +29,8 @@ app.get('/functions/v1/health', (req, res) => {
 app.all('/functions/v1/*', async (req, res) => {
   const relative = req.path.replace('/functions/v1', '')
   const pathLib = require('path')
-  const handlerPathResolved = pathLib.resolve(__dirname, `handlers${relative}.js`)
+  const sourcePath = relative.slice(1) + '/index.ts'
+  const handlerPathResolved = pathLib.resolve(__dirname, sourcePath)
   const handler = loadHandler(relative)
   if (!handler) return res.status(404).json({ error: 'handler not found', path: relative, handlerPath: handlerPathResolved })
   try {
