@@ -26,9 +26,10 @@ const sampleProjectId = 'proj-1'
 projects.set(sampleProjectId, {
   id: sampleProjectId,
   client_id: 'client-1',
+  owner_id: 'client-1',
   title: 'Build API',
   description: 'Need a Node API',
-  required_skills: ['node', 'express'],
+  skills: ['node', 'express'],
   project_type: 'fixed',
   budget_min: 1000,
   budget_max: 5000,

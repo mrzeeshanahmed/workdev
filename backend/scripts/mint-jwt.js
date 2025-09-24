@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const jwt = require('jsonwebtoken')
+import jwt from 'jsonwebtoken'
 
 const secret = process.env.JWT_SECRET || 'dev-secret'
 const argv = process.argv.slice(2)

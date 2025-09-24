@@ -8,8 +8,14 @@ let queries = []
 beforeEach(() => {
   origIsDb = db.isDbEnabled
   db.isDbEnabled = true
+  // Also patch the CJS require copy of the db module so controllers using require('../db') see the mocks
+  // When running under ESM interop, require(...) may return a namespace object { default: db }
+  // so prefer the .default export if present.
+  const rawCjs = require('../../../backend/src/db.js')
+  const cjsDb = rawCjs && rawCjs.default ? rawCjs.default : rawCjs
+  cjsDb.isDbEnabled = true
   queries = []
-  db.query = async (text, params) => {
+  const mockQuery = async (text, params) => {
     queries.push({ text, params })
     // simple routing for INSERT/SELECT used by controller
     if (text.startsWith('INSERT INTO projects')) {
@@ -27,6 +33,9 @@ beforeEach(() => {
     }
     return { rows: [], rowCount: 0 }
   }
+
+  db.query = mockQuery
+  cjsDb.query = mockQuery
 })
 
 afterEach(() => {
@@ -39,6 +48,7 @@ describe('projects controller (db mode)', () => {
     const out = await projectsController.createProject(payload)
     expect(out).toHaveProperty('id')
     // last INSERT params should contain owner_id and project_type
+    // inspect recorded queries
     const ins = queries.find(q => q.text.startsWith('INSERT INTO projects'))
     expect(ins).toBeDefined()
     expect(ins.params[0]).toBe('u-1')

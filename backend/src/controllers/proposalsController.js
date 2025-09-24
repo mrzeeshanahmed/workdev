@@ -1,5 +1,4 @@
-const db = require('../db')
-
+import db from '../db.js'
 async function createProposal(projectId, payload) {
   // basic validation
   if (!payload || (!payload.cover_letter && !payload.amount)) {
@@ -41,4 +40,4 @@ async function acceptProposal(projectId, proposalId, actorId) {
   return { id: proposalId, project_id: projectId, status: 'accepted', accepted_by: actorId || 'owner', accepted_at: new Date().toISOString() }
 }
 
-module.exports = { createProposal, acceptProposal }
+export { createProposal, acceptProposal }

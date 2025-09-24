@@ -1,10 +1,10 @@
 // Simple runtime checks for controllers used by unit tests
-const path = require('path')
+import path from 'path'
 
 async function run() {
   try {
-    const proposals = require(path.join(__dirname, '..', 'src', 'controllers', 'proposalsController'))
-    const projects = require(path.join(__dirname, '..', 'src', 'controllers', 'projectsController'))
+    const proposals = await import(path.join(process.cwd(), 'backend', 'src', 'controllers', 'proposalsController.js'))
+    const projects = await import(path.join(process.cwd(), 'backend', 'src', 'controllers', 'projectsController.js'))
 
     console.log('Checking createProposal validation (expect error)')
     try {

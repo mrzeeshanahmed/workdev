@@ -1,14 +1,14 @@
-const express = require('express')
+import express from 'express'
 // using express.json() instead of body-parser
-const { listPublicProjects } = require('./controllers/publicProjectsController')
-const { getProjectDetail } = require('./controllers/publicProjectDetailController')
-const { listProjects, createProject, getProjectDetail: getProjectDetailInternal } = require('./controllers/projectsController')
-const { createProposal, acceptProposal } = require('./controllers/proposalsController')
-const { listPublicDevelopers } = require('./controllers/publicDevelopersController')
-const { getDeveloperDetail } = require('./controllers/publicDeveloperDetailController')
-const rateLimit = require('./middleware/rateLimit')
-const auth = require('./middleware/auth')
-const analytics = require('./services/analyticsService')
+import { listPublicProjects } from './controllers/publicProjectsController.js'
+import { getProjectDetail } from './controllers/publicProjectDetailController.js'
+import { listProjects, createProject, getProjectDetail as getProjectDetailInternal } from './controllers/projectsController.js'
+import { createProposal, acceptProposal } from './controllers/proposalsController.js'
+import { listPublicDevelopers } from './controllers/publicDevelopersController.js'
+import { getDeveloperDetail } from './controllers/publicDeveloperDetailController.js'
+import rateLimit from './middleware/rateLimit.js'
+import * as auth from './middleware/auth.js'
+import * as analytics from './services/analyticsService.js'
 
 const app = express()
 app.use(express.json())
@@ -82,5 +82,5 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 4000
 const server = app.listen(PORT, () => console.log('API server listening on', PORT))
 
-// Export for tests and external control (if required)
-module.exports = { app, server }
+// Export for tests and external control (ESM)
+export { app, server }

@@ -54,6 +54,54 @@ If you find the fixture server duplicates too much behavior from the real API, c
 
 If you'd like, I can prepare that deprecation PR: it will update docs, add a migration path (scripts and small compatibility shim), and remove `dev-server.js` once CI and local workflows are updated.
 
+Deprecation: `backend/dev-server.js` (formal)
+---------------------------------------------
+
+Status: Deprecated — recommended replacement is `backend/src/server.js` (with in-memory fallback for local dev).
+
+Rationale
+- `dev-server.js` provides a fixture-style API that's useful for very fast frontend iteration, but maintaining two separate server implementations causes duplication, behavior drift, and bugs that only appear when running the real API. Consolidating on `src/server.js` reduces maintenance and improves parity between local dev and CI.
+
+Planned migration steps (recommended)
+1. Documentation & scripts (this PR)
+  - Update README (this file) to mark `dev-server.js` deprecated and point to `src/server.js` for local development.
+  - Add convenience npm scripts in `backend/package.json` for local dev using `src/server.js` (for example `backend:dev` that starts `src/server.js` with an in-memory fallback when `DATABASE_URL` is absent).
+
+2. Local developer guidance
+  - Use `src/server.js` for local work. When a DB is not available, the server will run in in-memory fallback mode (no migrations needed) and serve the same shapes used in tests.
+  - For fast frontend-only work where determinism is required, maintain a small compatibility shim (see below) that can start `src/server.js` with a seeded in-memory dataset.
+
+3. CI and automation updates
+  - Ensure CI jobs that previously started `dev-server.js` are updated to start `src/server.js` (or use the new `backend:dev` script) where appropriate.
+  - Run the `assert-no-duplicate-search.mjs` guard after migrations to catch trigger/index duplication before merging.
+
+4. Deprecation window and removal timeline
+  - Deprecation announcement: immediately (docs updated).
+  - Migration window: 2 sprints (≈4 weeks) — during this time, both servers remain runnable but `dev-server.js` is marked deprecated.
+  - Removal date: target removal at the end of the migration window (adjust as needed per team readiness). Removal will be performed in a separate PR that also updates CI and any automation scripts.
+
+Compatibility shim (recommended)
+- Provide a tiny wrapper script `backend/dev-compat.js` (or npm script) that:
+  - Starts `src/server.js` with an initial seed of deterministic sample data when `NODE_ENV=development` and `DATABASE_URL` is unset.
+  - Optionally exposes a `--fixture` flag to select a specific fixture set for frontend teams.
+
+Rollout & coordination
+- Announce the deprecation in your team channels and add a note to the sprint planning board to ensure teams have time to migrate any scripts that rely on `dev-server.js`.
+- Update any internal docs, local VS Code launch configurations, and `specs/` or `scripts/` that script `dev-server.js`.
+
+Fallback/rollback plan
+- Until the final removal PR is merged, keep `dev-server.js` executable and untouched in the repo so teams can continue local work if necessary.
+- If the migration causes an unexpected regression in CI, revert the removal PR and extend the migration window while the issues are resolved.
+
+Questions or next steps
+- I can prepare the deprecation PR that:
+  - Updates README (this change)
+  - Adds `backend:dev` and `backend:dev:seed` npm scripts
+  - Adds a small `backend/dev-compat.js` shim
+  - Optionally adds a CI job to validate the migration path
+
+Please tell me if you want me to prepare that PR now and whether you prefer a 2-sprint or 1-sprint migration window.
+
 Marketplace pagination & filtering contract
 -----------------------------------------
 

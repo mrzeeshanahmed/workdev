@@ -22,7 +22,8 @@ router.get('/', async (req, res) => {
 
 // POST mark message read
 router.post('/:messageId/read', async (req, res) => {
-  const { messageId } = req.params
+  // read the specific param value instead of the whole params object
+  const messageId = req.params.messageId
   const { userId } = req.body
   if (!userId) return res.status(400).json({ error: 'userId required' })
   const ok = await messagesService.markRead({ messageId, userId })

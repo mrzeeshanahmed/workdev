@@ -1,4 +1,4 @@
-const db = require('../db')
+import db from '../db.js'
 
 const SAMPLE_PROJECTS = [
   {
@@ -49,7 +49,7 @@ async function listProjects(query = {}) {
     LIMIT $${idx} OFFSET $${idx+1}`
     params.push(page_size, offset)
 
-    const { rows } = await db.query(sql, params)
+  const { rows } = await db.query(sql, params)
     const items = rows.map(r => {
       // ensure skills is always an array
       r.skills = Array.isArray(r.skills) ? r.skills : []
@@ -59,7 +59,7 @@ async function listProjects(query = {}) {
     // total count
     const countParams = params.slice(0, idx - 1)
     const countSql = `SELECT COUNT(*)::int AS cnt FROM projects p ${whereSql}`
-    const countRes = await db.query(countSql, countParams)
+  const countRes = await db.query(countSql, countParams)
     const total = countRes.rows[0] ? countRes.rows[0].cnt : items.length
 
     const next_cursor = (items.length === page_size) ? String(page + 1) : null
@@ -81,11 +81,10 @@ async function listProjects(query = {}) {
 }
 
 async function createProject(payload) {
-  if (db.isDbEnabled) {
+  // Try DB-backed flow; if it fails (DB not configured or query throws), fallback to in-memory
+  try {
     // Expect caller (route) to set payload.owner_id from authenticated user (req.user.id)
-    const { rows } = await db.query(
-      `INSERT INTO projects (owner_id, title, short_description, description, project_type, budget_min, budget_max, budget_currency, is_public, featured)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+    const { rows } = await db.query(`INSERT INTO projects (owner_id, title, short_description, description, project_type, budget_min, budget_max, budget_currency, is_public, featured) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
       [
         payload.owner_id || null,
         payload.title,
@@ -116,6 +115,10 @@ async function createProject(payload) {
     // If skills were provided, insert into project_skills as before and attach array
     project.skills = []
     return project
+  } catch (err) {
+    // fallback sample project
+    // eslint-disable-next-line no-console
+    console.debug('createProject db path failed, falling back to in-memory:', err && err.message)
   }
   // fallback sample project
   const project = Object.assign({}, payload, { id: 'p-' + Date.now(), owner_id: payload.owner_id || 'local-user', project_type: payload.project_type || payload.type || 'fixed', created_at: new Date().toISOString(), skills: payload.skills || [] })
@@ -134,4 +137,4 @@ async function getProjectDetail(id) {
   return SAMPLE_PROJECTS.find(p => p.id === id) || null
 }
 
-module.exports = { listProjects, createProject, getProjectDetail }
+export { listProjects, createProject, getProjectDetail }

@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken')
+import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
 // In local development, allow bypass if DEV_AUTH_BYPASS is set to '1'
@@ -19,7 +19,7 @@ function verifyToken(token) {
   }
 }
 
-function requireAuth(req, res, next) {
+export function requireAuth(req, res, next) {
   // allow bypass in local dev if env flag set
   if (DEV_BYPASS && (req.headers['x-user-id'] || req.body.owner_id)) {
     req.user = { id: req.headers['x-user-id'] || req.body.owner_id }
@@ -33,7 +33,7 @@ function requireAuth(req, res, next) {
   next()
 }
 
-function optionalAuth(req, res, next) {
+export function optionalAuth(req, res, next) {
   const token = parseAuthHeader(req.headers['authorization'])
   if (token) {
     const payload = verifyToken(token)
@@ -44,4 +44,4 @@ function optionalAuth(req, res, next) {
   next()
 }
 
-module.exports = { requireAuth, optionalAuth }
+// ESM exports are declared above

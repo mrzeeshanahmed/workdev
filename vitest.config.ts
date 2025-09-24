@@ -1,34 +1,31 @@
-// Export a plain config object so vitest can load this file even when vitest
-// is installed only in a workspace subfolder (frontend/node_modules).
-module.exports = {
-  test: {
-    // Run workspace-level tests located in frontend and backend packages.
-    // Avoid referencing non-existent `specs/` folder to prevent missed suites.
-    include: [
-      'frontend/src/**/*.test.@(ts|tsx|js)',
-      'backend/tests/unit/**/*.test.@(js|ts)'
-    ],
-    // Run spec-level contract/integration tests in Node so they don't require
-    // jsdom to be installed at the repository root. These tests call HTTP
-    // endpoints directly and work fine under Node (Node 18+ provides global fetch).
-    environment: 'node',
-    threads: false,
-    reporters: 'verbose'
-  }
-}
+import path from 'path'
 
-// Add resolver aliases so tests import React from the frontend package's
-// node_modules (single copy), preventing the "Invalid hook call" issue when
-// vitest (installed at repo root) resolves a different React instance.
-try {
-  const path = require('path')
-  const frontendNodeModules = path.resolve(__dirname, 'frontend', 'node_modules')
-  module.exports.resolve = {
-    alias: {
-      react: path.join(frontendNodeModules, 'react'),
-      'react-dom': path.join(frontendNodeModules, 'react-dom')
+// Use project-based discovery to avoid duplicate test runs and to apply
+// different environments per package (frontend -> jsdom, backend -> node).
+const frontendNodeModules = path.resolve(__dirname, 'frontend', 'node_modules')
+
+export default [
+  {
+    root: path.resolve(__dirname, 'frontend'),
+    test: {
+      include: ['src/**/*.test.@(ts|tsx)'],
+      environment: 'jsdom',
+      threads: false,
+    },
+    resolve: {
+      alias: {
+        react: path.join(frontendNodeModules, 'react'),
+        'react-dom': path.join(frontendNodeModules, 'react-dom'),
+      }
+    }
+  },
+  {
+    root: path.resolve(__dirname, 'backend'),
+    test: {
+      include: ['tests/**/*.(test|spec).@(js|ts)'],
+      environment: 'node',
+      globals: true,
+      threads: false,
     }
   }
-} catch (e) {
-  // best-effort; ignore when running in environments without frontend deps
-}
+]

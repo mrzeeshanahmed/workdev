@@ -2,6 +2,7 @@
   "name": "workdev-backend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
   "test": "vitest",
   "test:auth": "vitest tests/unit/auth.middleware.test.js",

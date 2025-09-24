@@ -1,3 +1,35 @@
+# Root .gitignore for the workdev monorepo
+# Ignore build artifacts, caches, reports, and local env files
+
+# Node / JS build outputs
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# TypeScript incremental build files
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# Local environment files
+.env
+
+# Frontend specific artifacts
+frontend/eslint-report.json
+
+# Functions build outputs (recursive)
+functions/**/dist/
+
+# macOS filesystem
+.DS_Store
+
+# Ignore editor/IDE specific files (but don't be too broad)
+# .vscode/
+
+# Keep source files tracked. This file intentionally doesn't ignore src/ or backend/src/
 node_modules
 .github
 .specify
@@ -19,3 +51,13 @@ coverage/
 
 # misc
 eslint-report.json
+
+# TypeScript build info
+**/tsconfig.tsbuildinfo
+
+# Ignore emitted JS next to TS sources in src folders
+backend/src/**/*.js
+frontend/src/**/*.js
+
+# Ignore archived Supabase client that contained hardcoded keys
+archive/**/src/lib/supabaseClient.ts
