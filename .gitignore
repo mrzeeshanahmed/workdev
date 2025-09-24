@@ -3,3 +3,4 @@ node_modules
 .specify
 .vscode
 specs
+frontend/eslint-report.json
