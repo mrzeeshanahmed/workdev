@@ -5,3 +5,4 @@ node_modules
 specs
 frontend/eslint-report.json
 functions/handlers/
+archive/
