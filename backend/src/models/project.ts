@@ -27,5 +27,4 @@ export const ProjectModel = {
     return rows;
   }
 }
-import { Skill } from './skill'
 // end

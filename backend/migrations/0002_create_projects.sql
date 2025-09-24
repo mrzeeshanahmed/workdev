@@ -58,30 +58,31 @@ COMMIT;
 -- File: backend/migrations/0002_create_projects.sql
 BEGIN;
 
--- create enum for project_type
-DO $$ BEGIN
-    CREATE TYPE project_type_t AS ENUM ('fixed', 'hourly', 'retainer');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+
+
+-- 0002_create_projects.sql
+-- Canonical projects table: UUID primary key and project_type enum
+BEGIN;
+
+CREATE TYPE IF NOT EXISTS project_type AS ENUM ('internal','public','private');
 
 CREATE TABLE IF NOT EXISTS projects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
-  short_description text,
+  slug text NOT NULL,
   description text,
-  project_type project_type_t NOT NULL DEFAULT 'fixed',
-  budget_min numeric(12,2),
-  budget_max numeric(12,2),
-  budget_currency varchar(3) NOT NULL DEFAULT 'USD',
-  is_public boolean NOT NULL DEFAULT true,
-  featured boolean NOT NULL DEFAULT false,
-  featured_at timestamptz,
-  owner_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  project_type project_type NOT NULL DEFAULT 'public',
+  owner_id uuid NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_projects_slug ON projects (lower(slug));
+
+-- If a users table exists, set up FK; deferred if not present at migration time.
+-- ALTER TABLE projects ADD CONSTRAINT fk_projects_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL;
+
+COMMIT;
 CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_projects_featured ON projects(featured, featured_at DESC);
 

@@ -1,0 +1,4 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+export default function Tabs({ active = 'milestones', onChange }) {
+    return (_jsxs("div", { style: { display: 'flex', gap: 8, marginBottom: 12 }, children: [_jsx("button", { onClick: () => onChange('milestones'), style: { fontWeight: active === 'milestones' ? 'bold' : 'normal' }, children: "Milestones" }), _jsx("button", { onClick: () => onChange('messages'), style: { fontWeight: active === 'messages' ? 'bold' : 'normal' }, children: "Messages" }), _jsx("button", { onClick: () => onChange('files'), style: { fontWeight: active === 'files' ? 'bold' : 'normal' }, children: "Files" }), _jsx("button", { onClick: () => onChange('details'), style: { fontWeight: active === 'details' ? 'bold' : 'normal' }, children: "Details" })] }));
+}

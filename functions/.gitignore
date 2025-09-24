@@ -1,0 +1,15 @@
+# Ignore node modules and build output
+node_modules/
+dist/
+build/
+
+# If TypeScript is the source of truth, ignore compiled JS in repo -> use dist/ or build/ instead
+# (avoid ignoring all .js because some handlers are JS source files)
+
+# logs and env
+.env
+.env.local
+*.log
+
+# OS
+.DS_Store

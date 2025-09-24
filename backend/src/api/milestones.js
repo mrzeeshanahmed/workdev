@@ -1,22 +1,27 @@
 import express from 'express'
 import * as milestonesService from '../services/milestonesService.js'
 import store from '../stores/inMemoryStore.js'
+import db from '../db.js'
 
 const router = express.Router({ mergeParams: true })
 
 // POST /api/workspaces/:workspaceId/milestones
 router.post('/', async (req, res) => {
   const workspaceId = req.params.workspaceId
-  if (!store.workspaces.get(workspaceId)) return res.status(404).json({ error: 'workspace not found' })
+  // check workspace existence: DB-backed if available, otherwise in-memory
+  if (db.isDbEnabled) {
+    const w = await db.query('SELECT id FROM workspaces WHERE id=$1', [workspaceId])
+    if (!w.rowCount) return res.status(404).json({ error: 'workspace not found' })
+  } else {
+    if (!store.workspaces.get(workspaceId)) return res.status(404).json({ error: 'workspace not found' })
+  }
   const { title, description, dueDate, amount } = req.body
   if (!title) return res.status(400).json({ error: 'title required' })
   try {
     const created = await milestonesService.createMilestone({ workspaceId, title, description, dueDate, amount, createdBy: null })
-    // normalize
-    if (created.milestoneId || created.milestoneId === undefined) {
-      return res.status(201).json({ milestoneId: created.milestoneId || created.id, state: created.state })
-    }
-    return res.status(201).json({ milestoneId: created.id, state: created.state })
+    // normalize id between different service return shapes
+    const id = created.id ?? created.milestoneId
+    return res.status(201).json({ milestoneId: id, state: created.state })
   } catch (err) {
     return res.status(500).json({ error: 'server error' })
   }
@@ -25,7 +30,12 @@ router.post('/', async (req, res) => {
 // GET list
 router.get('/', async (req, res) => {
   const workspaceId = req.params.workspaceId
-  if (!store.workspaces.get(workspaceId)) return res.status(404).json({ error: 'workspace not found' })
+  if (db.isDbEnabled) {
+    const w = await db.query('SELECT id FROM workspaces WHERE id=$1', [workspaceId])
+    if (!w.rowCount) return res.status(404).json({ error: 'workspace not found' })
+  } else {
+    if (!store.workspaces.get(workspaceId)) return res.status(404).json({ error: 'workspace not found' })
+  }
   try {
     const list = await milestonesService.listMilestonesForWorkspace(workspaceId)
     return res.json({ milestones: list })

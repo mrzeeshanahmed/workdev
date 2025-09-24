@@ -1,15 +1,11 @@
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || ''
 
 // Minimal stub factory (module-level)
-function makeFrom(tableName: string) {
-	const base = {
-		data: [],
-		error: null,
-	}
+function makeFrom(_tableName: string) {
 	return {
 		select: function () { return this },
 		eq: function () { return this },

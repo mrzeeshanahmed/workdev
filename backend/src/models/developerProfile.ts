@@ -21,5 +21,4 @@ export const DeveloperProfileModel = {
     return rows;
   }
 }
-import { Skill } from './skill'
 // end

@@ -10,6 +10,11 @@
   "strict": true,
     "resolveJsonModule": true,
     "lib": ["ES2020", "DOM"]
+    ,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "../specs"]

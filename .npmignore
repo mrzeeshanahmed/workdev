@@ -1,0 +1,12 @@
+# Exclude build artifacts and local files from npm package
+dist/
+build/
+coverage/
+frontend/eslint-report.json
+eslint-report.json
+.env.local
+.DS_Store
+*.log
+
+# Node modules are never published but keep for clarity
+node_modules/

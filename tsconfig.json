@@ -1,17 +1,8 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["frontend/src/*"]
-    }
-  },
-  "include": ["frontend/src", "backend/src", "functions", "specs"]
+  "files": [],
+  "references": [
+    { "path": "./frontend" },
+    { "path": "./backend" },
+    { "path": "./functions" }
+  ]
 }

@@ -24,23 +24,18 @@ async function createProposal(projectId, payload) {
 async function acceptProposal(projectId, proposalId, actorId) {
   if (db.isDbEnabled) {
     // mark selected proposal accepted and project status in a transaction
-    const client = await db.getClient()
-    try {
-      await client.query('BEGIN')
-      const { rows: propRows } = await client.query('UPDATE proposals SET status = $1 WHERE id = $2 AND project_id = $3 RETURNING *', ['accepted', proposalId, projectId])
+    return await db.transaction(async (client) => {
+      const { rows: propRows } = await client.query(
+        'UPDATE proposals SET status = $1 WHERE id = $2 AND project_id = $3 RETURNING *',
+        ['accepted', proposalId, projectId]
+      )
       if (!propRows[0]) {
-        await client.query('ROLLBACK')
+        // returning null keeps response shape consistent when nothing was updated
         return null
       }
       await client.query('UPDATE projects SET status = $1 WHERE id = $2', ['in_progress', projectId])
-      await client.query('COMMIT')
       return propRows[0]
-    } catch (e) {
-      await client.query('ROLLBACK')
-      throw e
-    } finally {
-      client.release()
-    }
+    })
   }
   // fallback: return a simple accepted object
   return { id: proposalId, project_id: projectId, status: 'accepted', accepted_by: actorId || 'owner', accepted_at: new Date().toISOString() }

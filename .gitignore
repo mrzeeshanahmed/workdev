@@ -6,3 +6,16 @@ specs
 frontend/eslint-report.json
 functions/handlers/
 archive/
+
+# build / output
+dist/
+build/
+coverage/
+
+# editor / env
+.env.local
+.DS_Store
+*.log
+
+# misc
+eslint-report.json

@@ -25,29 +25,16 @@ import developersRouter from './api/developers.js'
 app.use('/developers', developersRouter)
 
 import milestonesRouter from './api/milestones.js'
-app.use('/api/workspaces/:workspaceId/milestones', (req, res, next) => {
-  // forward to milestones router while keeping param workspaceId
-  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
-  next()
-}, milestonesRouter)
+app.use('/api/workspaces/:workspaceId/milestones', milestonesRouter)
 
 import filesRouter from './api/files.js'
-app.use('/api/workspaces/:workspaceId/files', (req, res, next) => {
-  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
-  next()
-}, filesRouter)
+app.use('/api/workspaces/:workspaceId/files', filesRouter)
 
 import notificationsRouter from './api/notifications.js'
-app.use('/api/workspaces/:workspaceId/notifications', (req, res, next) => {
-  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
-  next()
-}, notificationsRouter)
+app.use('/api/workspaces/:workspaceId/notifications', notificationsRouter)
 
 import messagesRouter from './api/messages.js'
-app.use('/api/workspaces/:workspaceId/messages', (req, res, next) => {
-  req.params.workspaceId = req.params.workspaceId || req.params.workspaceId
-  next()
-}, messagesRouter)
+app.use('/api/workspaces/:workspaceId/messages', messagesRouter)
 
 app.post('/developers/:developerId/saved-searches', (req, res) => {
   const developerId = req.params.developerId

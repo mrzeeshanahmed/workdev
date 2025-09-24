@@ -7,6 +7,7 @@ const { createProposal, acceptProposal } = require('./controllers/proposalsContr
 const { listPublicDevelopers } = require('./controllers/publicDevelopersController')
 const { getDeveloperDetail } = require('./controllers/publicDeveloperDetailController')
 const rateLimit = require('./middleware/rateLimit')
+const auth = require('./middleware/auth')
 const analytics = require('./services/analyticsService')
 
 const app = express()
@@ -39,9 +40,9 @@ app.get('/api/public/developers/:id', async (req, res) => {
 })
 
 // Client dashboard API: projects (private/public per auth in later iterations)
-app.post('/api/projects', async (req, res) => {
-  // In production, owner_id should be pulled from auth token; for now use header or fallback
-  const owner_id = req.headers['x-user-id'] || req.body.owner_id || null
+app.post('/api/projects', auth.requireAuth, async (req, res) => {
+  // owner_id must come from authenticated user
+  const owner_id = req.user && req.user.id ? req.user.id : null
   const payload = Object.assign({}, req.body, { owner_id })
   const project = await createProject(payload)
   res.status(201).json(project)
@@ -58,13 +59,16 @@ app.get('/api/projects/:id', async (req, res) => {
   res.json(project)
 })
 
-app.post('/api/projects/:id/proposals', async (req, res) => {
-  const proposal = await createProposal(req.params.id, req.body)
+app.post('/api/projects/:id/proposals', auth.requireAuth, async (req, res) => {
+  // proposer_id comes from authenticated user only
+  const proposer_id = req.user && req.user.id ? req.user.id : null
+  const body = Object.assign({}, req.body, { proposer_id })
+  const proposal = await createProposal(req.params.id, body)
   res.status(201).json(proposal)
 })
 
-app.patch('/api/projects/:projectId/proposals/:proposalId/accept', async (req, res) => {
-  const actor = req.headers['x-user-id'] || null
+app.patch('/api/projects/:projectId/proposals/:proposalId/accept', auth.requireAuth, async (req, res) => {
+  const actor = req.user && req.user.id ? req.user.id : null
   const result = await acceptProposal(req.params.projectId, req.params.proposalId, actor)
   if (!result) return res.status(404).json({ error: 'not found' })
   res.json(result)

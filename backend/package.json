@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "vitest",
+  "test": "vitest",
+  "test:auth": "vitest tests/unit/auth.middleware.test.js",
     "test:watch": "vitest --watch",
     "lint": "eslint ./src --ext .ts,.js",
     "dev:server": "node dev-server.js",
-    "dev:api": "node ./src/server.js"
+    "dev:api": "node ./src/server.js",
+    "mint-jwt": "node ./scripts/mint-jwt.js",
+    "migrate": "node ./scripts/run-migrations.mjs",
+    "migrate:dry": "node ./scripts/run-migrations.mjs --dry-run"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.0.0",
@@ -20,8 +24,7 @@
   "dependencies": {
     "busboy": "^1.6.0",
     "express": "^4.18.2",
-    "npm": "^11.6.0",
-    "pg": "^8.10.0",
-    "test": "^3.3.0"
+  "pg": "^8.10.0",
+  "jsonwebtoken": "^9.0.0"
   }
 }

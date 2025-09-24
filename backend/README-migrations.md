@@ -1,3 +1,36 @@
+# Running SQL migrations (POSIX / cross-platform)
+
+This repository ships a PowerShell migration runner (`backend/scripts/run-migrations.ps1`).
+For POSIX-compatible environments (macOS, Linux, WSL) and cross-platform Node.js users, use the Node ESM runner:
+
+`backend/scripts/run-migrations.mjs`
+
+Requirements
+- `node` (>=14)
+- `psql` available on PATH (Postgres client)
+- `DATABASE_URL` environment variable set to a Postgres connection string (for example: `postgresql://user:pass@localhost:5432/dbname`)
+
+Usage
+
+- Dry-run (list migrations without executing):
+
+```bash
+cd backend
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname node ./scripts/run-migrations.mjs --dry-run
+```
+
+- Execute migrations (applies each `.sql` file in lexical order):
+
+```bash
+cd backend
+export DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
+node ./scripts/run-migrations.mjs
+```
+
+Notes
+- Files in `backend/migrations` are applied in lexical order — prefix files with zero-padded numbers to guarantee ordering.
+- The runner prints each filename before running it and will fail fast on errors (non-zero `psql` exit code).
+- This script intentionally shells out to `psql` so it behaves similarly to running `psql -f <file>` locally and inherits `psql`'s client-side features.
 # Running database migrations (local)
 
 This project includes SQL migrations in `backend/migrations/` and a helper script `backend/scripts/run-migrations.ps1`.

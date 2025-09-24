@@ -2,7 +2,12 @@
 // is installed only in a workspace subfolder (frontend/node_modules).
 module.exports = {
   test: {
-    include: ['specs/**/tests/**/*.test.@(ts|tsx)'],
+    // Run workspace-level tests located in frontend and backend packages.
+    // Avoid referencing non-existent `specs/` folder to prevent missed suites.
+    include: [
+      'frontend/src/**/*.test.@(ts|tsx|js)',
+      'backend/tests/unit/**/*.test.@(js|ts)'
+    ],
     // Run spec-level contract/integration tests in Node so they don't require
     // jsdom to be installed at the repository root. These tests call HTTP
     // endpoints directly and work fine under Node (Node 18+ provides global fetch).

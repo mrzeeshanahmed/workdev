@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "backend:check": "node backend/scripts/run_unit_checks.js"
+    "backend:check": "node backend/scripts/run_unit_checks.js",
+    "test": "pnpm -w -s -r test"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.0",

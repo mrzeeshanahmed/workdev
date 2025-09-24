@@ -9,17 +9,38 @@ const MAX_BYTES = 50 * 1024 * 1024 // 50MB
 
 if (!fs.existsSync(STORAGE_DIR)) fs.mkdirSync(STORAGE_DIR, { recursive: true })
 
-export async function saveFile({ originalName, buffer, contentType, uploadedBy, workspaceId }) {
-  if (buffer.length > MAX_BYTES) {
-    const err = new Error('file too large')
-    err.code = 'FILE_TOO_LARGE'
-    throw err
+export async function saveFile({ originalName, buffer, sourcePath, contentType, uploadedBy, workspaceId }) {
+  // Support two modes: a buffer (existing behavior) or a sourcePath to a temp file (streamed upload)
+  let size = 0
+  if (sourcePath) {
+    const st = await fs.promises.stat(sourcePath)
+    size = st.size
+    if (size > MAX_BYTES) {
+      const err = new Error('file too large')
+      err.code = 'FILE_TOO_LARGE'
+      throw err
+    }
+  } else {
+    if (!buffer) buffer = Buffer.alloc(0)
+    size = buffer.length
+    if (size > MAX_BYTES) {
+      const err = new Error('file too large')
+      err.code = 'FILE_TOO_LARGE'
+      throw err
+    }
   }
+
   const id = uuidv4()
   const ext = path.extname(originalName) || ''
   const filename = `${id}${ext}`
   const full = path.join(STORAGE_DIR, filename)
-  await fs.promises.writeFile(full, buffer)
+
+  if (sourcePath) {
+    // move or copy the temp file into storage
+    await fs.promises.copyFile(sourcePath, full)
+  } else {
+    await fs.promises.writeFile(full, buffer)
+  }
 
   const meta = {
     id,
@@ -27,7 +48,7 @@ export async function saveFile({ originalName, buffer, contentType, uploadedBy, 
     original_name: originalName,
     filename,
     content_type: contentType || null,
-    size: buffer.length,
+    size,
     storage_path: full,
     created_by: uploadedBy || null,
     created_at: new Date().toISOString(),
