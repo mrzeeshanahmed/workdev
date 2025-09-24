@@ -35,3 +35,17 @@ jobs:
         run: pnpm vitest --run
         env:
           CI: true
+
+  type-check:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+      - name: Run TypeScript type-check
+        run: pnpm dlx tsc --noEmit
