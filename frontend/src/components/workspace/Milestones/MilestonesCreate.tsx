@@ -1,16 +1,27 @@
 import * as React from 'react'
 
-export default function MilestonesCreate({ workspaceId, onCreated }: any) {
-  const [title, setTitle] = React.useState('')
-  const [description, setDescription] = React.useState('')
+type Props = {
+  workspaceId: string
+  onCreated?: (milestone: any) => void
+}
+
+export default function MilestonesCreate({ workspaceId, onCreated }: Props) {
+  const [title, setTitle] = React.useState<string>('')
+  const [description, setDescription] = React.useState<string>('')
   const [file, setFile] = React.useState<File | null>(null)
 
-  async function submit(e: any) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const res = await fetch(`/api/workspaces/${workspaceId}/milestones`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description }) })
+    const res = await fetch(`/api/workspaces/${workspaceId}/milestones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description }),
+    })
+
     if (res.status === 201) {
       const data = await res.json()
       onCreated?.(data)
+
       // if user selected a file, attempt to upload it to files endpoint (best-effort)
       if (file) {
         try {
@@ -21,26 +32,35 @@ export default function MilestonesCreate({ workspaceId, onCreated }: any) {
           console.warn('file upload failed', err)
         }
       }
+
       setTitle('')
       setDescription('')
+      setFile(null)
     } else {
-      alert('failed')
+      // show a helpful message
+      const text = await res.text().catch(() => null)
+      alert(`Failed to create milestone${text ? `: ${text}` : ''}`)
     }
+  }
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.currentTarget.files && e.currentTarget.files.length ? e.currentTarget.files[0] : null
+    setFile(f)
   }
 
   return (
     <form onSubmit={submit}>
       <div>
-        <label>Title</label>
-        <input value={title} onChange={e => setTitle(e.target.value)} />
+        <label htmlFor="milestone-title">Title</label>
+        <input id="milestone-title" value={title} onChange={e => setTitle(e.currentTarget.value)} placeholder="e.g. Design mockups" />
       </div>
       <div>
-        <label>Description</label>
-        <textarea value={description} onChange={e => setDescription(e.target.value)} />
+        <label htmlFor="milestone-description">Description</label>
+        <textarea id="milestone-description" value={description} onChange={e => setDescription(e.currentTarget.value)} placeholder="Describe the milestone" />
       </div>
       <div>
-        <label>Attachment (optional)</label>
-        <input type="file" onChange={e => setFile(e.target.files ? e.target.files[0] : null)} />
+        <label htmlFor="milestone-file">Attachment (optional)</label>
+        <input id="milestone-file" type="file" onChange={onFileChange} aria-label="Milestone attachment" />
       </div>
       <button type="submit">Create Milestone</button>
     </form>
